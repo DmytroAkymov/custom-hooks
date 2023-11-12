@@ -2,45 +2,34 @@ import React, { useEffect, useState } from 'react';
 
 import Products from './components/Products/Products';
 import NewProduct from './components/NewProduct/NewProduct';
+import useHttp from './components/hooks/use-Http';
 
 function App() {
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
     const [products, setProducts] = useState([]);
 
-    const fetchProducts = async (productText) => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(
-                'https://dmytro-84d92-default-rtdb.asia-southeast1.firebasedatabase.app/products.json'
-            );
-
-            if (!response.ok) {
-                throw new Error('Ошибка запроса.');
-            }
-
-            const data = await response.json();
-
-            const loadedProducts = [];
-
-            for (const productKey in data) {
-                loadedProducts.push({
-                    id: productKey,
-                    text: data[productKey].text,
-                });
-            }
-            console.log(response);
-            setProducts(loadedProducts);
-        } catch (err) {
-            setError(err.message || 'Что-то пошло не так...');
-        }
-        setIsLoading(false);
-    };
+    const { sendHttpRequest: fetchProducts, isLoading, error } = useHttp();
 
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        const manageProducts = (productsData) => {
+            const loadedProducts = [];
+
+            for (const productKey in productsData) {
+                loadedProducts.push({
+                    id: productKey,
+                    text: productsData[productKey].text,
+                });
+            }
+
+            setProducts(loadedProducts);
+        };
+        fetchProducts(
+            {
+                endpoint:
+                    'https://dmytro-84d92-default-rtdb.asia-southeast1.firebasedatabase.app/products.json',
+            },
+            manageProducts
+        );
+    }, [fetchProducts]);
 
     const productAddHandler = (product) => {
         setProducts((prevProducts) => prevProducts.concat(product));
