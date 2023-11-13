@@ -1,42 +1,30 @@
-import { useState } from 'react';
-
 import Section from '../UI/Section';
 import ProductForm from './ProductForm';
+import useHttp from '../hooks/use-Http';
 
 const NewProduct = (props) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const { isLoading, error, sendHttpRequest: sendProduct } = useHttp();
+
+    const createProduct = (productText, productData) => {
+        const generatedId = productData.name;
+        const createdProduct = { id: generatedId, text: productText };
+
+        props.onAddProduct(createdProduct);
+    };
 
     const enterProductHandler = async (productText) => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(
-                'https://dmytro-84d92-default-rtdb.asia-southeast1.firebasedatabase.app/products.json',
-
-                {
-                    method: 'POST',
-                    body: JSON.stringify({ text: productText }),
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error('The request failed.');
-            }
-
-            const data = await response.json();
-
-            const generatedId = data.name;
-            const createdProduct = { id: generatedId, text: productText };
-
-            props.onAddProduct(createdProduct);
-        } catch (e) {
-            setError(e.message || 'Something went wrong...');
-        }
-        setIsLoading(false);
+        sendProduct(
+            {
+                endpoint:
+                    'https://dmytro-84d92-default-rtdb.asia-southeast1.firebasedatabase.app/products.json',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: { text: productText },
+            },
+            createProduct.bind(null, productText)
+        );
     };
 
     return (
